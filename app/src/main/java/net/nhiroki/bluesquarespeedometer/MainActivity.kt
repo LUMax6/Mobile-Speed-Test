@@ -126,6 +126,12 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_COARSE_LOCATION))
         }
 
+        val container = findViewById<View>(R.id.main_activity_version_info_footer).parent as android.widget.LinearLayout
+        container.addView(Button(this).apply {
+            text = "速度记录 / 导出 / 分享上传"
+            setOnClickListener { startActivity(Intent(this@MainActivity, SpeedRecordsActivity::class.java)) }
+        }, 0)
+
         this.findViewById<Button>(R.id.main_activity_licensing_information_button).setOnClickListener {
             startActivity(Intent(this, LicensingInformationActivity::class.java))
         }
@@ -516,22 +522,23 @@ class MainActivity : AppCompatActivity() {
      * > 一時間に千八百五十二メートルの速さ
      */
     fun updateLocation(location:Location) {
+        SpeedLog.append(this, location)
         val speedUnit:Int = PreferenceManager.getDefaultSharedPreferences(this).getInt(PREFERENCE_KEY_SPEED_UNIT, PREFERENCE_VAL_SPEED_UNIT_DEFAULT)!!
         when(speedUnit) {
             PREFERENCE_VAL_SPEED_UNIT_KM_H -> {
-                findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText((location.speed * 3.6).toInt().toString())
+                findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText(if (location.hasSpeed()) String.format("%.2f", (location.speed * 3.6)) else "-")
                 findViewById<TextView>(R.id.main_activity_speed_unit_textview).setText(R.string.unit_km_per_hour)
             }
             PREFERENCE_VAL_SPEED_UNIT_KNOT -> {
-                findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText((location.speed * 3.6 / 1.852).toInt().toString())
+                findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText(if (location.hasSpeed()) String.format("%.2f", (location.speed * 3.6 / 1.852)) else "-")
                 findViewById<TextView>(R.id.main_activity_speed_unit_textview).setText(R.string.unit_knot)
             }
             PREFERENCE_VAL_SPEED_UNIT_M_S -> {
-                findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText((location.speed).toInt().toString())
+                findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText(if (location.hasSpeed()) String.format("%.2f", (location.speed)) else "-")
                 findViewById<TextView>(R.id.main_activity_speed_unit_textview).setText(R.string.unit_meter_per_second)
             }
             PREFERENCE_VAL_SPEED_UNIT_MPH -> {
-                findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText((location.speed * 3.6 / 1.609344).toInt().toString())
+                findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText(if (location.hasSpeed()) String.format("%.2f", (location.speed * 3.6 / 1.609344)) else "-")
                 findViewById<TextView>(R.id.main_activity_speed_unit_textview).setText(R.string.unit_mile_per_hour)
             }
         }

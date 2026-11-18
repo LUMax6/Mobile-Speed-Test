@@ -112,20 +112,21 @@ class DigitalSpeedometer1Activity : AppCompatActivity() {
 
     // Confidence for each unit is on comment on MainActivity
     private fun updateLocation(location: Location) {
+        net.nhiroki.bluesquarespeedometer.SpeedLog.append(this, location)
         val speedUnit:Int = PreferenceManager.getDefaultSharedPreferences(this).getInt(MainActivity.PREFERENCE_KEY_SPEED_UNIT, MainActivity.PREFERENCE_VAL_SPEED_UNIT_DEFAULT )!!
 
         when(speedUnit) {
             MainActivity.PREFERENCE_VAL_SPEED_UNIT_KM_H -> {
-                findViewById<TextView>(R.id.digital_meter1_textview).setText((location.speed * 3.6).toInt().toString())
+                findViewById<TextView>(R.id.digital_meter1_textview).setText(if (location.hasSpeed()) String.format("%.2f", (location.speed * 3.6)) else "-")
             }
             MainActivity.PREFERENCE_VAL_SPEED_UNIT_KNOT -> {
-                findViewById<TextView>(R.id.digital_meter1_textview).setText((location.speed * 3.6 / 1.852).toInt().toString())
+                findViewById<TextView>(R.id.digital_meter1_textview).setText(if (location.hasSpeed()) String.format("%.2f", (location.speed * 3.6 / 1.852)) else "-")
             }
             MainActivity.PREFERENCE_VAL_SPEED_UNIT_M_S -> {
-                findViewById<TextView>(R.id.digital_meter1_textview).setText((location.speed).toInt().toString())
+                findViewById<TextView>(R.id.digital_meter1_textview).setText(if (location.hasSpeed()) String.format("%.2f", (location.speed)) else "-")
             }
             MainActivity.PREFERENCE_VAL_SPEED_UNIT_MPH -> {
-                findViewById<TextView>(R.id.digital_meter1_textview).setText((location.speed * 3.6 / 1.609344).toInt().toString())
+                findViewById<TextView>(R.id.digital_meter1_textview).setText(if (location.hasSpeed()) String.format("%.2f", (location.speed * 3.6 / 1.609344)) else "-")
             }
         }
         updateUnitText()
