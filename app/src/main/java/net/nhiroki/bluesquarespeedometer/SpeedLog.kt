@@ -2,85 +2,106 @@ package net.nhiroki.bluesquarespeedometer
 
 import android.content.Context
 import android.location.Location
-import android.util.AtomicFile
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.Executors
 
-/** All file operations are serialized off the UI thread. */
+/** Session controls and location callbacks run on the main thread. File work runs in order on the worker. */
 object SpeedLog {
-    @Volatile var recording = false
-    fun defaultName() = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date()) + "_speed_records.csv"
-    private val worker = Executors.newSingleThreadExecutor()
-    private const val LEGACY_HEADER = "time_unix_ms,local_time,latitude_deg,longitude_deg,speed_m_s"
-    private const val HEADER = "$LEGACY_HEADER,speed_accuracy_m_s"
-    private var preparedFile: File? = null
-    @Volatile var error: String? = null
-        private set
+    private class Session {
+        // Accessed only by the file worker.
+        var file: File? = null
+    }
 
-    fun append(context: Context, location: Location) {
-        if (!recording) return
-        val name = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date(location.time)) + "_speed_records.csv"
-        val localTime = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date(location.time))
-        val app = context.applicationContext
+    private val worker = Executors.newSingleThreadExecutor()
+    private val main = Handler(Looper.getMainLooper())
+    private const val SUFFIX = "_speed_records.csv"
+    private const val HEADER = "time_unix_ms,local_time,latitude_deg,longitude_deg,speed_m_s,speed_accuracy_m_s"
+    private var activeSession: Session? = null
+    val recording: Boolean get() = activeSession != null
+
+    fun start(context: Context, onError: (String) -> Unit) {
+        if (recording) return
+        val directory = context.filesDir
+        val startedAt = SimpleDateFormat("yyyy-MM-dd_HHmmss_SSS", Locale.US).format(Date())
+        val session = Session()
+        activeSession = session
+        worker.execute {
+            try {
+                var file = File(directory, "$startedAt$SUFFIX")
+                var sequence = 2
+                while (!file.createNewFile()) {
+                    file = File(directory, "${startedAt}_${sequence++}$SUFFIX")
+                }
+                try {
+                    file.writeText("$HEADER\n")
+                } catch (e: IOException) {
+                    file.delete()
+                    throw e
+                }
+                session.file = file
+            } catch (e: IOException) {
+                main.post {
+                    if (activeSession === session) activeSession = null
+                    onError(e.localizedMessage ?: "无法创建记录文件")
+                }
+            }
+        }
+    }
+
+    fun stop() {
+        activeSession = null
+    }
+
+    fun append(location: Location) {
+        val session = activeSession ?: return
+        val localTime = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date(location.time))
         val speed = location.speed.takeIf { location.hasSpeed() }?.toString().orEmpty()
         val accuracy = location.speedAccuracyOrNull()?.toString().orEmpty()
         val row = "${location.time},$localTime,${location.latitude},${location.longitude},$speed,$accuracy\n"
         worker.execute {
             try {
-                val file = File(app.filesDir, name)
-                if (preparedFile != file || !file.exists()) {
-                    prepareFile(file)
-                    preparedFile = file
-                }
-                file.appendText(row)
-                error = null
-            } catch (e: Exception) { error = e.localizedMessage ?: "写入失败" }
-        }
-    }
-
-    private fun prepareFile(file: File) {
-        if (!file.exists() || file.length() == 0L) {
-            file.writeText("$HEADER\n")
-            return
-        }
-        file.bufferedReader().use { reader ->
-            when (reader.readLine()) {
-                HEADER -> return
-                LEGACY_HEADER -> {
-                    val atomic = AtomicFile(file)
-                    val stream = atomic.startWrite()
-                    try {
-                        val writer = stream.bufferedWriter(Charsets.UTF_8)
-                        writer.appendLine(HEADER)
-                        reader.forEachLine { writer.appendLine("$it,") }
-                        writer.flush()
-                        atomic.finishWrite(stream)
-                    } catch (e: Exception) {
-                        atomic.failWrite(stream)
-                        throw e
-                    }
-                }
-                else -> throw java.io.IOException("无法识别速度记录的 CSV 表头")
+                session.file?.appendText(row)
+            } catch (e: IOException) {
+                Log.e("SpeedLog", "Could not append a speed sample", e)
             }
         }
     }
 
-    fun snapshot(context: Context, name: String = defaultName(), callback: (File?, String?) -> Unit) {
+    fun listRecords(context: Context, callback: (List<String>) -> Unit) {
+        val directory = context.filesDir
+        worker.execute {
+            val names = directory.listFiles()
+                ?.filter { it.isFile && (it.name.endsWith(SUFFIX) || it.name == "speed_records.csv") }
+                ?.sortedWith(compareByDescending<File> { it.lastModified() }.thenByDescending { it.name })
+                ?.map { it.name }.orEmpty()
+            main.post { callback(names) }
+        }
+    }
+
+    fun snapshot(context: Context, name: String?, callback: (File?, String?) -> Unit) {
         val app = context.applicationContext
         worker.execute {
-            try {
-                val source = File(app.filesDir, name)
-                if (!source.exists()) {
-                    callback(null, "暂无记录，请先在测速页面获取定位")
-                } else {
-                    val directory = File(app.cacheDir, "exports")
-                    directory.mkdirs()
-                    val folder = File(directory, java.util.UUID.randomUUID().toString()).apply { mkdirs() }
-                    val copy = File(folder, source.name)
-                    source.copyTo(copy, overwrite = true)
-                    callback(copy, error)
-                }
-            } catch (e: Exception) { callback(null, e.localizedMessage ?: "读取失败") }
+            val source = name?.let { File(app.filesDir, it) }
+            if (source == null || !source.isFile) {
+                callback(null, "暂无记录，请先开始记录")
+                return@execute
+            }
+            val copy = try {
+                val folder = File(app.cacheDir, "exports/${UUID.randomUUID()}").apply { mkdirs() }
+                source.copyTo(File(folder, source.name))
+            } catch (e: IOException) {
+                callback(null, e.localizedMessage ?: "读取失败")
+                return@execute
+            }
+            callback(copy, null)
         }
     }
 }

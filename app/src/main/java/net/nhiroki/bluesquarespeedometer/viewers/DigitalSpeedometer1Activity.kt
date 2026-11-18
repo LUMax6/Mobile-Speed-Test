@@ -114,7 +114,7 @@ class DigitalSpeedometer1Activity : AppCompatActivity() {
 
     // Confidence for each unit is on comment on MainActivity
     private fun updateLocation(location: Location) {
-        net.nhiroki.bluesquarespeedometer.SpeedLog.append(this, location)
+        net.nhiroki.bluesquarespeedometer.SpeedLog.append(location)
         val speedUnit:Int = PreferenceManager.getDefaultSharedPreferences(this).getInt(MainActivity.PREFERENCE_KEY_SPEED_UNIT, MainActivity.PREFERENCE_VAL_SPEED_UNIT_DEFAULT )!!
 
         when(speedUnit) {

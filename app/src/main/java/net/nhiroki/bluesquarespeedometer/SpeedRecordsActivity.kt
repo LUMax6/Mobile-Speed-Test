@@ -15,7 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 import java.util.concurrent.Executors
 
 class SpeedRecordsActivity : AppCompatActivity() {
-    private var selectedName = SpeedLog.defaultName()
+    private var selectedName: String? = null
     private val importCsv = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             val worker = Executors.newSingleThreadExecutor()
@@ -51,6 +51,7 @@ class SpeedRecordsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        selectedName = savedInstanceState?.getString("selectedRecord")
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(24, 24, 24, 24)
@@ -62,11 +63,14 @@ class SpeedRecordsActivity : AppCompatActivity() {
             insets
         }
         layout.addView(TextView(this).apply {
-            text = "速度记录\n主页面点击开始记录后，测速页面收到定位才追加到本地 CSV 文件，切换到后台后不采集。\n字段：Unix 毫秒时间、本地时分秒、纬度、经度、速度、速度精度估计（均为 m/s）。缺失值留空，记录保留原始小数。\n导出可保存到本机或系统文件选择器中的云盘；分享可选择支持文件的上传应用。"
+            text = "速度记录\n每次点击开始记录都会创建独立的 CSV 文件。测速页面收到定位后写入数据，切换到后台后不采集。\n字段：Unix 毫秒时间、本地时分秒、纬度、经度、速度、速度精度估计（均为 m/s）。缺失值留空，记录保留原始小数。\n导出可保存到本机或系统文件选择器中的云盘；分享可选择支持文件的上传应用。"
         })
         layout.addView(Button(this).apply {
             text = "导出 CSV"
-            setOnClickListener { export.launch(selectedName) }
+            setOnClickListener {
+                val name = selectedName
+                if (name == null) message("暂无本地记录") else export.launch(name)
+            }
         })
         layout.addView(Button(this).apply {
             text = "分享 / 上传 CSV"
@@ -88,17 +92,23 @@ class SpeedRecordsActivity : AppCompatActivity() {
                 }
             }
         })
-        val names = filesDir.listFiles()?.filter { it.name.endsWith("speed_records.csv") }?.map { it.name }?.sortedDescending().orEmpty()
-        layout.addView(Button(this).apply {
-            text = "选择本地记录（默认今天）"
-            setOnClickListener {
-                android.app.AlertDialog.Builder(this@SpeedRecordsActivity)
+        val recordPicker = Button(this)
+        recordPicker.text = selectedName ?: "正在读取本地记录…"
+        recordPicker.isEnabled = false
+        layout.addView(recordPicker)
+        SpeedLog.listRecords(this) { names ->
+            if (isDestroyed) return@listRecords
+            selectedName = selectedName?.takeIf { it in names } ?: names.firstOrNull()
+            recordPicker.text = selectedName ?: "暂无本地记录"
+            recordPicker.isEnabled = names.isNotEmpty()
+            recordPicker.setOnClickListener {
+                android.app.AlertDialog.Builder(this)
                     .setItems(names.toTypedArray()) { _, index ->
                         selectedName = names[index]
-                        text = selectedName
+                        recordPicker.text = selectedName
                     }.show()
             }
-        })
+        }
         chart = SpeedChartView(this)
         layout.addView(Button(this).apply {
             text = "分析所选本地 CSV"
@@ -119,6 +129,11 @@ class SpeedRecordsActivity : AppCompatActivity() {
             setOnClickListener { importCsv.launch(arrayOf("*/*")) }
         })
         layout.addView(chart, LinearLayout.LayoutParams(-1, 0, 1f))
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("selectedRecord", selectedName)
+        super.onSaveInstanceState(outState)
     }
 
     private fun message(text: String) {

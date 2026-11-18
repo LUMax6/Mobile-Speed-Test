@@ -129,7 +129,16 @@ class MainActivity : AppCompatActivity() {
         recordButton = findViewById(R.id.main_activity_record_button)
         refreshRecordButton()
         recordButton.setOnClickListener {
-            SpeedLog.recording = !SpeedLog.recording
+            if (SpeedLog.recording) {
+                SpeedLog.stop()
+            } else {
+                SpeedLog.start(this) { error ->
+                    if (!isDestroyed) {
+                        refreshRecordButton()
+                        android.widget.Toast.makeText(this, error, android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
             refreshRecordButton()
         }
         findViewById<Button>(R.id.main_activity_records_button).setOnClickListener {
@@ -276,7 +285,7 @@ class MainActivity : AppCompatActivity() {
 
         val currentPreferenceLocationProvider:String = PreferenceManager.getDefaultSharedPreferences(this).getString(PREFERENCE_KEY_LOCATION_PROVIDER, "")!!
 
-        findViewById<TextView>(R.id.main_activity_config_location_provider_textview).setText(if (currentPreferenceLocationProvider.isEmpty()) getText(R.string.general_caption_unset) else currentPreferenceLocationProvider)
+        findViewById<TextView>(R.id.main_activity_config_location_provider_textview).setText(if (currentPreferenceLocationProvider.isEmpty()) getText(R.string.general_caption_unset) else locationProviderLabel(currentPreferenceLocationProvider))
 
         if (Build.VERSION.SDK_INT >= 28) {
             if (!this._locationManager!!.isLocationEnabled()) {
@@ -292,7 +301,7 @@ class MainActivity : AppCompatActivity() {
 
         if (!this._locationManager!!.isProviderEnabled(currentPreferenceLocationProvider)) {
             findViewById<View>(R.id.main_activity_location_not_enabled).visibility = View.VISIBLE
-            findViewById<TextView>(R.id.main_activity_location_not_enabled_message).setText(getText(R.string.error_soft_location_provider_not_enabled).toString().format(currentPreferenceLocationProvider))
+            findViewById<TextView>(R.id.main_activity_location_not_enabled_message).setText(getText(R.string.error_soft_location_provider_not_enabled).toString().format(locationProviderLabel(currentPreferenceLocationProvider)))
             return
         }
 
@@ -302,6 +311,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.main_activity_links_to_direct_meters).visibility = View.VISIBLE
         refreshRecordButton(true)
     }
+
+    private fun locationProviderLabel(provider: String): String =
+        if (provider == LocationManager.GPS_PROVIDER) "GNSS" else provider
 
     private fun changeProviderButtonClicked() {
         val locationProviders:List<String> = _locationManager!!.getProviders(false)
@@ -315,7 +327,7 @@ class MainActivity : AppCompatActivity() {
             if (currentPreferenceLocationProvider.equals(ret)) {
                 checkedItem = it
             }
-            ret
+            locationProviderLabel(ret)
         })
 
         AlertDialog.Builder(this).setTitle(R.string.dialog_select_location_provider).setSingleChoiceItems(candidates, checkedItem, DialogInterface.OnClickListener {
@@ -542,7 +554,7 @@ class MainActivity : AppCompatActivity() {
      * > 一時間に千八百五十二メートルの速さ
      */
     fun updateLocation(location:Location) {
-        SpeedLog.append(this, location)
+        SpeedLog.append(location)
         val speedUnit:Int = PreferenceManager.getDefaultSharedPreferences(this).getInt(PREFERENCE_KEY_SPEED_UNIT, PREFERENCE_VAL_SPEED_UNIT_DEFAULT)!!
         when(speedUnit) {
             PREFERENCE_VAL_SPEED_UNIT_KM_H -> {
@@ -592,7 +604,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.main_activity_current_coordinate_textview).setText(currentCordinateText)
 
         var geolocationDetailText = ""
-        geolocationDetailText += location.provider + "\n";
+        geolocationDetailText += locationProviderLabel(location.provider.orEmpty()) + "\n"
         geolocationDetailText += getText(R.string.metrics_accuracy).toString() + ": " + String.format("%.1f", location.accuracy) + " " + getText(R.string.unit_meter) +  "\n"
         geolocationDetailText += getText(R.string.metrics_info_time).toString() + ": " + SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date(location.time))
 
