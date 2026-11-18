@@ -98,6 +98,8 @@ class MainActivity : AppCompatActivity() {
     var _sensorManager:SensorManager? = null
     var _sensorEventListener: SensorEventListener? = null
 
+    private lateinit var recordButton: Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.enableEdgeToEdge()
@@ -127,6 +129,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         val container = findViewById<View>(R.id.main_activity_version_info_footer).parent as android.widget.LinearLayout
+        recordButton = Button(this).apply {
+            text = if (SpeedLog.recording) "停止记录" else "开始记录"
+            setOnClickListener {
+                SpeedLog.recording = !SpeedLog.recording
+                text = if (SpeedLog.recording) "停止记录" else "开始记录"
+            }
+        }
+        container.addView(recordButton, 0)
         container.addView(Button(this).apply {
             text = "速度记录 / 导出 / 分享上传"
             setOnClickListener { startActivity(Intent(this@MainActivity, SpeedRecordsActivity::class.java)) }

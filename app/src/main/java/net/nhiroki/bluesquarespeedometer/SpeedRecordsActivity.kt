@@ -15,8 +15,23 @@ import androidx.core.view.WindowInsetsCompat
 import java.util.concurrent.Executors
 
 class SpeedRecordsActivity : AppCompatActivity() {
+    private var selectedName = SpeedLog.defaultName()
+    private val importCsv = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val worker = Executors.newSingleThreadExecutor()
+            worker.execute {
+                try {
+                    val points = contentResolver.openInputStream(uri)?.bufferedReader()?.use { SpeedCsv.parse(it) }
+                        ?: error("无法读取文件")
+                    runOnUiThread { chart.points = points }
+                } catch (e: Exception) { message("分析失败：${e.localizedMessage}") }
+            }
+            worker.shutdown()
+        }
+    }
+    private lateinit var chart: SpeedChartView
     private val export = registerForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
-        if (uri != null) SpeedLog.snapshot(this) { file, error ->
+        if (uri != null) SpeedLog.snapshot(this, selectedName) { file, error ->
             if (file == null) message(error ?: "无记录") else {
                 Executors.newSingleThreadExecutor().apply {
                     execute {
@@ -47,16 +62,16 @@ class SpeedRecordsActivity : AppCompatActivity() {
             insets
         }
         layout.addView(TextView(this).apply {
-            text = "速度记录\n测速页面收到定位后自动追加到本地 CSV 文件，切换到后台后不采集。\n字段：Unix 毫秒时间、纬度、经度、速度（m/s）。缺失速度留空，记录保留原始小数。\n导出可保存到本机或系统文件选择器中的云盘；分享可选择支持文件的上传应用。"
+            text = "速度记录\n主页面点击开始记录后，测速页面收到定位才追加到本地 CSV 文件，切换到后台后不采集。\n字段：Unix 毫秒时间、本地时分秒、纬度、经度、速度（m/s）。缺失速度留空，记录保留原始小数。\n导出可保存到本机或系统文件选择器中的云盘；分享可选择支持文件的上传应用。"
         })
         layout.addView(Button(this).apply {
             text = "导出 CSV"
-            setOnClickListener { export.launch("speed_records.csv") }
+            setOnClickListener { export.launch(selectedName) }
         })
         layout.addView(Button(this).apply {
             text = "分享 / 上传 CSV"
             setOnClickListener {
-                SpeedLog.snapshot(this@SpeedRecordsActivity) { file, error ->
+                SpeedLog.snapshot(this@SpeedRecordsActivity, selectedName) { file, error ->
                     runOnUiThread {
                         if (file == null) message(error ?: "无记录")
                         else try {
@@ -73,10 +88,37 @@ class SpeedRecordsActivity : AppCompatActivity() {
                 }
             }
         })
-        SpeedLog.snapshot(this) { file, error ->
-            file?.delete()
-            if (error != null) message(error)
-        }
+        val names = filesDir.listFiles()?.filter { it.name.endsWith("speed_records.csv") }?.map { it.name }?.sortedDescending().orEmpty()
+        layout.addView(Button(this).apply {
+            text = "选择本地记录（默认今天）"
+            setOnClickListener {
+                android.app.AlertDialog.Builder(this@SpeedRecordsActivity)
+                    .setItems(names.toTypedArray()) { _, index ->
+                        selectedName = names[index]
+                        text = selectedName
+                    }.show()
+            }
+        })
+        chart = SpeedChartView(this)
+        layout.addView(Button(this).apply {
+            text = "分析所选本地 CSV"
+            setOnClickListener {
+                SpeedLog.snapshot(this@SpeedRecordsActivity, selectedName) { file, error ->
+                    try {
+                        if (file == null) message(error ?: "无记录") else {
+                            val points = file.bufferedReader().use { SpeedCsv.parse(it) }
+                            runOnUiThread { chart.points = points }
+                        }
+                    } catch (e: Exception) { message("分析失败：${e.localizedMessage}") }
+                    finally { file?.delete() }
+                }
+            }
+        })
+        layout.addView(Button(this).apply {
+            text = "导入 CSV 分析"
+            setOnClickListener { importCsv.launch(arrayOf("*/*")) }
+        })
+        layout.addView(chart, LinearLayout.LayoutParams(-1, 0, 1f))
     }
 
     private fun message(text: String) {
