@@ -16,6 +16,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import net.nhiroki.bluesquarespeedometer.MainActivity
 import net.nhiroki.bluesquarespeedometer.R
+import net.nhiroki.bluesquarespeedometer.speedAccuracyLabel
 
 class DigitalSpeedometer1Activity : AppCompatActivity() {
     var _locationManager: LocationManager? = null
@@ -65,6 +66,7 @@ class DigitalSpeedometer1Activity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         findViewById<TextView>(R.id.digital_meter1_textview).setText("...")
+        findViewById<TextView>(R.id.digital_meter1_speed_accuracy).setText(R.string.speed_accuracy_unavailable)
         updateLocationProvider()
         updateUnitText()
     }
@@ -130,5 +132,8 @@ class DigitalSpeedometer1Activity : AppCompatActivity() {
             }
         }
         updateUnitText()
+        val speedUnitLabel = findViewById<TextView>(R.id.digital_meter1_unit_textview).text
+        findViewById<TextView>(R.id.digital_meter1_speed_accuracy).text =
+            speedAccuracyLabel(location, speedUnit, speedUnitLabel)
     }
 }

@@ -1,0 +1,4 @@
+<resources>
+    <string name="speed_accuracy_estimate">速度精度の推定値: ±%1$.2f %2$s</string>
+    <string name="speed_accuracy_unavailable">速度精度：取得できません</string>
+</resources>

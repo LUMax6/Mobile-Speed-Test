@@ -1,0 +1,4 @@
+<resources>
+    <string name="speed_accuracy_estimate">예상 속도 정확도: ±%1$.2f %2$s</string>
+    <string name="speed_accuracy_unavailable">속도 정확도: 제공되지 않음</string>
+</resources>

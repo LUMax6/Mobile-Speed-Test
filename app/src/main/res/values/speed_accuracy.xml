@@ -1,0 +1,4 @@
+<resources>
+    <string name="speed_accuracy_estimate">Estimated speed accuracy: ±%1$.2f %2$s</string>
+    <string name="speed_accuracy_unavailable">Speed accuracy: unavailable</string>
+</resources>

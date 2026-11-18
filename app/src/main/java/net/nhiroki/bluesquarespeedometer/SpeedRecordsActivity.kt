@@ -62,7 +62,7 @@ class SpeedRecordsActivity : AppCompatActivity() {
             insets
         }
         layout.addView(TextView(this).apply {
-            text = "速度记录\n主页面点击开始记录后，测速页面收到定位才追加到本地 CSV 文件，切换到后台后不采集。\n字段：Unix 毫秒时间、本地时分秒、纬度、经度、速度（m/s）。缺失速度留空，记录保留原始小数。\n导出可保存到本机或系统文件选择器中的云盘；分享可选择支持文件的上传应用。"
+            text = "速度记录\n主页面点击开始记录后，测速页面收到定位才追加到本地 CSV 文件，切换到后台后不采集。\n字段：Unix 毫秒时间、本地时分秒、纬度、经度、速度、速度精度估计（均为 m/s）。缺失值留空，记录保留原始小数。\n导出可保存到本机或系统文件选择器中的云盘；分享可选择支持文件的上传应用。"
         })
         layout.addView(Button(this).apply {
             text = "导出 CSV"

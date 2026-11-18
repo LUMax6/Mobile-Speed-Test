@@ -1,0 +1,4 @@
+<resources>
+    <string name="speed_accuracy_estimate">Anslått hastighetsnøyaktighet: ±%1$.2f %2$s</string>
+    <string name="speed_accuracy_unavailable">Hastighetsnøyaktighet: ikke tilgjengelig</string>
+</resources>

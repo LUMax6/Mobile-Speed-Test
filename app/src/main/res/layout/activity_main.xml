@@ -92,6 +92,13 @@
                 android:textSize="24sp"
                 />
         </LinearLayout>
+        <TextView
+            android:id="@+id/main_activity_speed_accuracy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:textColor="?baseTextColor"
+            android:text="@string/speed_accuracy_unavailable" />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="3dp"

@@ -49,6 +49,14 @@
                     android:gravity="bottom"
                     />
             </LinearLayout>
+            <TextView
+                android:id="@+id/digital_meter1_speed_accuracy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/speed_accuracy_unavailable"
+                android:textColor="?baseTextColor"
+                android:textSize="16sp" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

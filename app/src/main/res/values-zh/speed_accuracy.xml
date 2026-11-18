@@ -1,0 +1,4 @@
+<resources>
+    <string name="speed_accuracy_estimate">速度精度估计：±%1$.2f %2$s</string>
+    <string name="speed_accuracy_unavailable">速度精度：未提供</string>
+</resources>

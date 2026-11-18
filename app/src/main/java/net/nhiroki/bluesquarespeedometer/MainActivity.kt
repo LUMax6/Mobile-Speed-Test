@@ -226,6 +226,7 @@ class MainActivity : AppCompatActivity() {
         }()
 
         findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText("-")
+        findViewById<TextView>(R.id.main_activity_speed_accuracy).setText(R.string.speed_accuracy_unavailable)
         findViewById<TextView>(R.id.main_activity_config_speed_unit_textview).setText(speedUnitName)
         findViewById<TextView>(R.id.main_activity_speed_unit_textview).setText(speedUnitName)
 
@@ -553,6 +554,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        val speedUnitLabel = findViewById<TextView>(R.id.main_activity_speed_unit_textview).text
+        findViewById<TextView>(R.id.main_activity_speed_accuracy).text =
+            speedAccuracyLabel(location, speedUnit, speedUnitLabel)
+
         if (Build.VERSION.SDK_INT >= 34 && !location.hasMslAltitude()) {
             // There are both cases that msl altitude is automatically added and not
             try {
@@ -633,6 +638,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.main_activity_config_location_provider_textview).setText(R.string.general_caption_unset)
 
         findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText("-")
+        findViewById<TextView>(R.id.main_activity_speed_accuracy).setText(R.string.speed_accuracy_unavailable)
 
         findViewById<TextView>(R.id.main_activity_altitude_digits_textview).setText("-")
 

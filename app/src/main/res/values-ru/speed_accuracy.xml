@@ -1,0 +1,4 @@
+<resources>
+    <string name="speed_accuracy_estimate">Оценка точности скорости: ±%1$.2f %2$s</string>
+    <string name="speed_accuracy_unavailable">Точность скорости: нет данных</string>
+</resources>
