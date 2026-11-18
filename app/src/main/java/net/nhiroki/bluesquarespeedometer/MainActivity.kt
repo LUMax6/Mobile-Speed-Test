@@ -14,7 +14,6 @@ import android.hardware.SensorManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import android.location.altitude.AltitudeConverter
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -29,7 +28,6 @@ import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import net.nhiroki.bluesquarespeedometer.viewers.DigitalSpeedometer1Activity
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -128,19 +126,15 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_COARSE_LOCATION))
         }
 
-        val container = findViewById<View>(R.id.main_activity_version_info_footer).parent as android.widget.LinearLayout
-        recordButton = Button(this).apply {
-            text = if (SpeedLog.recording) "停止记录" else "开始记录"
-            setOnClickListener {
-                SpeedLog.recording = !SpeedLog.recording
-                text = if (SpeedLog.recording) "停止记录" else "开始记录"
-            }
+        recordButton = findViewById(R.id.main_activity_record_button)
+        refreshRecordButton()
+        recordButton.setOnClickListener {
+            SpeedLog.recording = !SpeedLog.recording
+            refreshRecordButton()
         }
-        container.addView(recordButton, 0)
-        container.addView(Button(this).apply {
-            text = "速度记录 / 导出 / 分享上传"
-            setOnClickListener { startActivity(Intent(this@MainActivity, SpeedRecordsActivity::class.java)) }
-        }, 0)
+        findViewById<Button>(R.id.main_activity_records_button).setOnClickListener {
+            startActivity(Intent(this, SpeedRecordsActivity::class.java))
+        }
 
         this.findViewById<Button>(R.id.main_activity_licensing_information_button).setOnClickListener {
             startActivity(Intent(this, LicensingInformationActivity::class.java))
@@ -168,6 +162,13 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.main_activity_version_info_footer).setText(getString(R.string.app_name) + " " + BuildConfig.VERSION_NAME)
     }
 
+    private fun refreshRecordButton(locationAvailable: Boolean =
+        findViewById<View>(R.id.main_activity_links_to_direct_meters).visibility == View.VISIBLE
+    ) {
+        recordButton.setText(if (SpeedLog.recording) R.string.speed_record_stop else R.string.speed_record_start)
+        recordButton.isEnabled = locationAvailable || SpeedLog.recording
+    }
+
     override fun onResume() {
         super.onResume()
 
@@ -178,6 +179,7 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.main_activity_permission_location_not_granted).visibility = if (fineLocationPermission) View.GONE else View.VISIBLE
         findViewById<View>(R.id.main_activity_links_to_direct_meters).visibility = View.GONE
+        refreshRecordButton(false)
 
         if (fineLocationPermission) {
             findViewById<TextView>(R.id.main_activity_permission_status_textview).setText(R.string.permission_location_fine);
@@ -265,6 +267,12 @@ class MainActivity : AppCompatActivity() {
     private fun updateLocationProvider() {
         this._locationManager!!.removeUpdates(this._locationListener!!)
         clearLocationDisplay()
+        findViewById<View>(R.id.main_activity_links_to_direct_meters).visibility = View.GONE
+        findViewById<View>(R.id.main_activity_location_not_enabled).visibility = View.GONE
+        refreshRecordButton(false)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED
+        ) return
 
         val currentPreferenceLocationProvider:String = PreferenceManager.getDefaultSharedPreferences(this).getString(PREFERENCE_KEY_LOCATION_PROVIDER, "")!!
 
@@ -292,6 +300,7 @@ class MainActivity : AppCompatActivity() {
 
         this._locationManager!!.requestLocationUpdates(currentPreferenceLocationProvider, 0, 0.0f, this._locationListener!!)
         findViewById<View>(R.id.main_activity_links_to_direct_meters).visibility = View.VISIBLE
+        refreshRecordButton(true)
     }
 
     private fun changeProviderButtonClicked() {
@@ -558,36 +567,20 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.main_activity_speed_accuracy).text =
             speedAccuracyLabel(location, speedUnit, speedUnitLabel)
 
-        if (Build.VERSION.SDK_INT >= 34 && !location.hasMslAltitude()) {
-            // There are both cases that msl altitude is automatically added and not
-            try {
-                AltitudeConverter().addMslAltitudeToLocation(this, location)
-            } catch (e:IllegalArgumentException) {
-                // ignore, just continue without MSL altitude
-                // There is a documented case
-            } catch (e:IOException) {
-                // IOException is also documented
-            }
-        }
-
-        val altitudeUnit:Int = PreferenceManager.getDefaultSharedPreferences(this).getInt(PREFERENCE_KEY_ALTITUDE_UNIT, PREFERENCE_VAL_ALTITUDE_DEFAULT)!!
-        var altitudeMeterToShow:Double
-        if (Build.VERSION.SDK_INT >= 34 && location.hasMslAltitude()) {
-            altitudeMeterToShow = location.mslAltitudeMeters
-            findViewById<TextView>(R.id.main_activity_altitude_caption_textview).setText(R.string.metrics_msl_altitude)
-        } else {
-            // This case the height is WGS84 based
-            // https://developer.android.com/reference/android/location/Location#getAltitude()
-            altitudeMeterToShow = location.altitude
-            findViewById<TextView>(R.id.main_activity_altitude_caption_textview).setText(R.string.metrics_wgs84_altitude)
+        val altitudeUnit = PreferenceManager.getDefaultSharedPreferences(this)
+            .getInt(PREFERENCE_KEY_ALTITUDE_UNIT, PREFERENCE_VAL_ALTITUDE_DEFAULT)
+        val altitudeMeterToShow = if (location.hasAltitude()) location.altitude else Double.NaN
+        val altitudeText = if (altitudeMeterToShow.isNaN()) "-" else when (altitudeUnit) {
+            PREFERENCE_VAL_ALTITUDE_FEET -> (altitudeMeterToShow / 0.3048).toInt().toString()
+            else -> altitudeMeterToShow.toInt().toString()
         }
         when(altitudeUnit) {
             PREFERENCE_VAL_ALTITUDE_METERS -> {
-                findViewById<TextView>(R.id.main_activity_altitude_digits_textview).setText(altitudeMeterToShow.toInt().toString())
+                findViewById<TextView>(R.id.main_activity_altitude_digits_textview).setText(altitudeText)
                 findViewById<TextView>(R.id.main_activity_altitude_unit_textview).setText(R.string.unit_meter)
             }
             PREFERENCE_VAL_ALTITUDE_FEET -> {
-                findViewById<TextView>(R.id.main_activity_altitude_digits_textview).setText((altitudeMeterToShow / 0.3048).toInt().toString())
+                findViewById<TextView>(R.id.main_activity_altitude_digits_textview).setText(altitudeText)
                 findViewById<TextView>(R.id.main_activity_altitude_unit_textview).setText(R.string.unit_feet)
             }
         }
@@ -596,45 +589,22 @@ class MainActivity : AppCompatActivity() {
         var currentCordinateText:String = ""
         currentCordinateText += (degreeToDisplayText(location.longitude, getText(R.string.coordinate_display_east).toString(), getText(R.string.coordinate_display_west).toString()) + " " +
                 degreeToDisplayText(location.latitude, getText(R.string.coordinate_display_north).toString(), getText(R.string.coordinate_display_south).toString()))
-        if (Build.VERSION.SDK_INT >= 34 && location.hasMslAltitude()) {
-            // Here also adds WGS84 altitude
-            // https://developer.android.com/reference/android/location/Location#getAltitude()
-            currentCordinateText += "\n" + getText(R.string.metrics_wgs84_altitude) + ": "
-            when(altitudeUnit) {
-                PREFERENCE_VAL_ALTITUDE_METERS -> {
-                    currentCordinateText += location.altitude.toInt().toString() + " " + getText(R.string.unit_meter)
-                }
-                PREFERENCE_VAL_ALTITUDE_FEET -> {
-                    currentCordinateText += ((location.altitude / 0.3048).toInt().toString()) + " " + getText(R.string.unit_feet)
-                }
-            }
-        }
         findViewById<TextView>(R.id.main_activity_current_coordinate_textview).setText(currentCordinateText)
 
         var geolocationDetailText = ""
         geolocationDetailText += location.provider + "\n";
         geolocationDetailText += getText(R.string.metrics_accuracy).toString() + ": " + String.format("%.1f", location.accuracy) + " " + getText(R.string.unit_meter) +  "\n"
-        if (Build.VERSION.SDK_INT >= 34 && location.hasMslAltitude()) {
-            geolocationDetailText += getText(R.string.metrics_msl_altitude_accuracy).toString() + ": "
-            when(altitudeUnit) {
-                PREFERENCE_VAL_ALTITUDE_METERS -> {
-                    geolocationDetailText += (location.mslAltitudeAccuracyMeters + 0.5).toInt().toString() + " " + getText(R.string.unit_meter)
-                }
-                PREFERENCE_VAL_ALTITUDE_FEET -> {
-                    geolocationDetailText += ((location.mslAltitudeAccuracyMeters / 0.3048 + 0.5).toInt().toString()) + " " + getText(R.string.unit_feet)
-                }
-            }
-            geolocationDetailText += "\n"
-        }
         geolocationDetailText += getText(R.string.metrics_info_time).toString() + ": " + SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date(location.time))
 
         findViewById<TextView>(R.id.main_activity_geolocation_detail_textview).setText(geolocationDetailText)
 
         findViewById<View>(R.id.main_activity_location_not_enabled).visibility = View.GONE
         findViewById<View>(R.id.main_activity_links_to_direct_meters).visibility = View.VISIBLE
+        refreshRecordButton(true)
     }
 
     fun clearLocationDisplay() {
+        _displayedHeightM = Double.NaN
         findViewById<TextView>(R.id.main_activity_config_location_provider_textview).setText(R.string.general_caption_unset)
 
         findViewById<TextView>(R.id.main_activity_speed_digits_textview).setText("-")

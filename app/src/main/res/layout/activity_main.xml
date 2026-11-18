@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="8dp"
+        android:padding="16dp"
         >
         <LinearLayout
             android:id="@+id/main_activity_permission_location_not_granted"
@@ -99,162 +99,40 @@
             android:gravity="end"
             android:textColor="?baseTextColor"
             android:text="@string/speed_accuracy_unavailable" />
-        <LinearLayout
+        <Button
+            android:id="@+id/main_activity_record_button"
+            android:layout_marginTop="12dp"
+            android:enabled="false"
             android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:background="@color/colorAccent"
-            android:layout_marginVertical="4sp"
-            />
-        <TextView
-            android:id="@+id/main_activity_altitude_caption_textview"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/metrics_altitude"
-            />
-        <LinearLayout
-            android:layout_width="wrap_content"
+            android:text="@string/speed_record_start" />
+        <Button
+            android:id="@+id/main_activity_records_button"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="bottom|end"
-            >
-            <TextView
-                android:id="@+id/main_activity_altitude_digits_textview"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="60sp"
-                android:fontFamily="monospace"
-                android:textColor="?baseTextColor"
-                android:paddingEnd="30sp"
-                android:gravity="right"
-                />
-            <TextView
-                android:id="@+id/main_activity_altitude_unit_textview"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="24sp"
-                />
-        </LinearLayout>
+            android:text="@string/speed_record_files" />
         <LinearLayout
-            android:id="@+id/main_activity_pressure_area"
+            android:id="@+id/main_activity_links_to_direct_meters"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:visibility="gone"
             >
-            <TextView
-                android:layout_width="wrap_content"
+            <Button
+                android:id="@+id/main_activity_meter_car1_button"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/metrics_barometric_pressure"
+                android:text="@string/menu_this_app_digital_speedometer_fullscreen"
                 />
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_gravity="bottom|end"
-                >
-                <TextView
-                    android:id="@+id/main_activity_pressure_digits_textview"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="40sp"
-                    android:fontFamily="monospace"
-                    android:textColor="?baseTextColor"
-                    android:paddingEnd="20sp"
-                    android:gravity="right"
-                    />
-                <TextView
-                    android:id="@+id/main_activity_pressure_unit_textview"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="24sp"
-                    />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_gravity="end"
-                >
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_gravity="end"
-                    >
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/metrics_pressure_altitude_qne"
-                        android:layout_gravity="end"
-                        />
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_gravity="bottom|end"
-                        >
-                        <TextView
-                            android:id="@+id/main_activity_pressure_altitude_digits_textview"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="20sp"
-                            android:gravity="right"
-                            android:fontFamily="monospace"
-                            android:textColor="?baseTextColor"
-                            android:paddingEnd="10sp"
-                            />
-                        <TextView
-                            android:id="@+id/main_activity_pressure_altitude_unit_textview"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="12sp"
-                            />
-                    </LinearLayout>
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_gravity="end"
-                    >
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/metrics_pressure_sea_level"
-                        android:layout_gravity="end"
-                        />
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_gravity="bottom|end"
-                        >
-                        <TextView
-                            android:id="@+id/main_activity_pressure_sea_level_digits_textview"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="20sp"
-                            android:fontFamily="monospace"
-                            android:textColor="?baseTextColor"
-                            android:gravity="right"
-                            android:paddingEnd="10sp"
-                            android:minWidth="120sp"
-                            />
-                        <TextView
-                            android:id="@+id/main_activity_pressure_sea_level_unit_textview"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="12sp"
-                            />
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
         </LinearLayout>
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:background="@color/colorAccent"
-            android:layout_marginVertical="4sp"
-            />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/speed_location_details"
+            android:textColor="?baseTextColor"
+            android:textSize="18sp"
+            android:textStyle="bold" />
         <TextView
             android:id="@+id/main_activity_current_coordinate_textview"
             android:layout_width="wrap_content"
@@ -279,10 +157,120 @@
             />
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:background="@color/colorAccent"
-            android:layout_marginVertical="4sp"
-            />
+            android:layout_height="wrap_content"
+            android:baselineAligned="true">
+            <TextView
+                android:id="@+id/main_activity_altitude_caption_textview"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/metrics_wgs84_altitude"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/main_activity_altitude_digits_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:fontFamily="monospace"
+                android:textColor="?baseTextColor"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/main_activity_altitude_unit_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:textSize="14sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/main_activity_pressure_area"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="true">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/metrics_barometric_pressure"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/main_activity_pressure_digits_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="monospace"
+                    android:textColor="?baseTextColor"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/main_activity_pressure_unit_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textSize="14sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="true">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/metrics_pressure_altitude_qne"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/main_activity_pressure_altitude_digits_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="monospace"
+                    android:textColor="?baseTextColor"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/main_activity_pressure_altitude_unit_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textSize="14sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="true">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/metrics_pressure_sea_level"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/main_activity_pressure_sea_level_digits_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="monospace"
+                    android:textColor="?baseTextColor"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/main_activity_pressure_sea_level_unit_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/speed_settings"
+            android:textColor="?baseTextColor"
+            android:textSize="18sp"
+            android:textStyle="bold" />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -422,31 +410,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:text="@string/general_button_change"
-                />
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:background="@color/colorAccent"
-            android:layout_marginVertical="4sp"
-            />
-        <LinearLayout
-            android:id="@+id/main_activity_links_to_direct_meters"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            >
-            <Button
-                android:id="@+id/main_activity_meter_car1_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/menu_this_app_digital_speedometer_fullscreen"
-                />
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="3dp"
-                android:background="@color/colorAccent"
-                android:layout_marginVertical="4sp"
                 />
         </LinearLayout>
         <Button

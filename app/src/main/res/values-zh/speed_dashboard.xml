@@ -1,0 +1,7 @@
+<resources>
+    <string name="speed_record_start">开始记录</string>
+    <string name="speed_record_stop">停止记录</string>
+    <string name="speed_record_files">记录与分析</string>
+    <string name="speed_location_details">定位详情</string>
+    <string name="speed_settings">设置</string>
+</resources>
